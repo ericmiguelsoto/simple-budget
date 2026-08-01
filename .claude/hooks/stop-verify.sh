@@ -28,7 +28,9 @@ if ! ls tests/*.test.js >/dev/null 2>&1; then
   exit 0
 fi
 
-TEST_OUTPUT=$(node --test tests/ 2>&1)
+# NOTE: bare `node --test` (default file discovery). Passing the directory
+# (`node --test tests/`) breaks on this machine — see tasks/lessons.md.
+TEST_OUTPUT=$(node --test 2>&1)
 if [ $? -ne 0 ]; then
   TRUNCATED=$(echo "$TEST_OUTPUT" | grep -E "not ok|fail|✖" | head -15)
   ESCAPED=$(echo "$TRUNCATED" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
