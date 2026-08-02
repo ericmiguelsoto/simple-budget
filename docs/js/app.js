@@ -7,6 +7,7 @@ import {
   monthKey,
   monthLabel,
   todayStr,
+  normalizeData,
   categoryName,
   summarizeMonth,
   historyMonths,
@@ -282,6 +283,21 @@ function renderSettings() {
       ${newRow}
       ${renamingCategoryId === "new" ? "" : `<button class="ghost-btn" id="add-category">Add category</button>`}
       ${archivedBlock}
+    </section>
+
+    <section class="section">
+      <span class="label">Backup</span>
+      <div class="backup-btns">
+        <button class="ghost-btn" id="export-backup">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5L12 14l4.5-4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          Export backup
+        </button>
+        <button class="ghost-btn" id="import-backup">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14V3M7.5 7.5L12 3l4.5 4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          Import backup
+        </button>
+      </div>
+      <p class="hint">All data lives on this phone — nothing is sent anywhere. Export a backup now and then (and before clearing browser data, which would erase the app's storage).</p>
     </section>`;
 
   // A just-created rename/add input gets focus immediately.
@@ -367,6 +383,53 @@ function commitBudgetInput() {
     showToast(`Budget set — ${formatCents(cents)} per month`);
   }
   renderSettings();
+}
+
+// ---------------------------------------------------------------------------
+// Backup: export downloads a JSON file, import restores one
+// ---------------------------------------------------------------------------
+
+function exportBackup() {
+  const backup = { app: "simple-budget", exportedAt: todayStr(), ...data };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `budget-backup-${todayStr()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Backup downloaded");
+}
+
+async function importBackupFile(file) {
+  let parsed = null;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch {
+    showToast("That file isn't a readable backup");
+    return;
+  }
+
+  // normalizeData accepts anything and repairs what it can.
+  const incoming = normalizeData(parsed);
+  const summaryText =
+    `Replace everything in the app with this backup?\n\n` +
+    `${incoming.expenses.length} expense${incoming.expenses.length === 1 ? "" : "s"}, ` +
+    `budget ${formatCents(incoming.monthlyBudgetCents)} per month.\n\n` +
+    `Your current data will be overwritten.`;
+
+  if (!window.confirm(summaryText)) return;
+
+  data = incoming;
+  selectedCategoryId = firstActiveCategoryId();
+  persist();
+  renderHome();
+  renderHistory();
+  renderSettings();
+  showToast("Backup restored");
 }
 
 // ---------------------------------------------------------------------------
@@ -516,6 +579,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("#export-backup")) {
+    exportBackup();
+    return;
+  }
+
+  if (event.target.closest("#import-backup")) {
+    $("#import-file").click();
+    return;
+  }
+
   const chip = event.target.closest(".chip");
   if (chip) {
     selectedCategoryId = chip.getAttribute("data-category-id");
@@ -535,6 +608,12 @@ document.addEventListener("click", (event) => {
     if (expense) openSheet(expense);
     return;
   }
+});
+
+$("#import-file").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (file) importBackupFile(file);
+  event.target.value = ""; // allow picking the same file again later
 });
 
 $("#fab").addEventListener("click", () => openSheet());

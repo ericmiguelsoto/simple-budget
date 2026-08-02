@@ -390,6 +390,9 @@ body {
 
 .ghost-btn:active { color: var(--cream); border-color: var(--cream-faint); }
 
+.backup-btns { display: flex; gap: 10px; }
+.backup-btns .ghost-btn { margin-top: 10px; }
+
 /* ---------- bottom bar ---------- */
 
 .tab-bar {

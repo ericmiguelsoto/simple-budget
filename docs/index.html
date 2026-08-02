@@ -101,6 +101,10 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- Hidden file picker for restoring a backup (lives outside the
+       re-rendered settings container so its listener survives) -->
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
+
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
