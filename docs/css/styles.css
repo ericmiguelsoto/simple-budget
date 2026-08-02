@@ -1,0 +1,620 @@
+/* styles.css — the app's entire look.
+   Direction: "ledger by lamplight" — dark bottle-green ground, cream ink,
+   brass for money. Phone-only; on a desktop it renders as a centered
+   phone-width column. Matches the approved mockup. */
+
+:root {
+  color-scheme: dark;
+  --ground: #121712;        /* page background */
+  --raised: #1A211B;        /* sheets, inputs, tab bar */
+  --sunken: #0D110D;        /* behind the app column on desktop */
+  --hairline: #2C352D;      /* stronger rules */
+  --hairline-soft: #222A23; /* row dividers (the ledger lines) */
+  --cream: #EFEAD8;         /* primary text */
+  --cream-dim: #9FA894;     /* secondary text */
+  --cream-faint: #6E7768;   /* labels, hints */
+  --brass: #C9A55F;         /* THE money color: hero number, accents */
+  --brass-deep: #A88547;
+  --sage: #8FBA8B;          /* on-track category lines */
+  --brick: #D4685A;         /* over budget */
+  --ink-on-brass: #1B1608;  /* text on brass buttons */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--sunken);
+  color: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The app is a phone-width column; on a phone it IS the screen. */
+.app {
+  position: relative;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--ground);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---------- view switching (Home / History / Settings) ---------- */
+
+.view {
+  flex: 1;
+  display: none;
+  padding: 22px 22px 130px;
+}
+
+.app[data-view="home"]     .view-home,
+.app[data-view="history"]  .view-history,
+.app[data-view="settings"] .view-settings { display: block; animation: view-in 160ms ease-out; }
+
+@keyframes view-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- the two type voices ---------- */
+
+/* Whispered ledger labels */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cream-faint);
+}
+
+/* Numbers always line up in columns */
+.money { font-variant-numeric: tabular-nums; }
+
+/* ---------- header ---------- */
+
+.app-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 26px;
+}
+
+.app-head .label { color: var(--cream-dim); }
+
+.head-spacer { flex: 1; }
+
+.icon-btn {
+  background: none;
+  border: 0;
+  color: var(--cream-dim);
+  padding: 8px;
+  margin: -8px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.icon-btn:active { color: var(--cream); }
+
+/* ---------- hero: the one number that matters ---------- */
+
+.hero { padding-bottom: 10px; }
+
+.hero .label { display: block; margin-bottom: 10px; }
+
+.hero-amount {
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--brass);
+  word-break: break-word;
+}
+
+/* No budget set yet: the number is neutral, not brass */
+.hero-amount.neutral { color: var(--cream); }
+
+/* Over budget: the number turns brick */
+.hero-amount.over { color: var(--brick); }
+
+.hero-sub {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--cream-dim);
+}
+
+/* Tappable "set your budget" prompt when no budget exists */
+.hero-sub .link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--brass);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- the filling ruled lines ---------- */
+
+.rule {
+  position: relative;
+  height: 2px;
+  background: var(--hairline-soft);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.rule > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill, 0%);
+  background: var(--rule-color, var(--sage));
+  border-radius: 1px;
+  transition: width 500ms ease-out;
+}
+
+.hero .rule { margin-top: 20px; height: 3px; }
+.hero .rule > i { background: var(--brass); }
+.hero .rule.over > i { background: var(--brick); }
+.hero .rule.hidden { display: none; }
+
+/* ---------- sections & ledger rows ---------- */
+
+.section { margin-top: 34px; }
+
+.section > .label { display: block; margin-bottom: 6px; }
+
+.ledger-row { padding: 15px 0 13px; }
+
+.ledger-row .line1 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ledger-row .name {
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-row .figures {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--cream-dim);
+}
+
+.ledger-row .figures strong { color: var(--cream); font-weight: 650; }
+
+.ledger-row .rule { margin-top: 12px; }
+
+/* ---------- expense list ---------- */
+
+.expense {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--hairline-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.expense:active { background: rgba(239, 234, 216, 0.03); }
+
+.expense .day {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--cream-faint);
+  width: 46px;
+  flex: none;
+  text-transform: uppercase;
+}
+
+.expense .what { flex: 1; min-width: 0; }
+
+.expense .what .note {
+  font-size: 15px;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expense .what .cat {
+  font-size: 12px;
+  color: var(--cream-faint);
+  margin-top: 2px;
+}
+
+.expense .amt { font-size: 15px; font-weight: 650; color: var(--cream); }
+
+/* ---------- hints & empty states ---------- */
+
+.hint {
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--cream-faint);
+}
+
+.empty {
+  margin-top: 12px;
+  padding: 22px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cream-dim);
+}
+
+/* ---------- history ---------- */
+
+.month {
+  width: 100%;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--hairline-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 16px 0;
+  cursor: pointer;
+}
+
+.month .line1 { display: flex; align-items: baseline; gap: 10px; }
+
+.month .name { font-size: 16px; font-weight: 600; flex: 1; }
+
+.month .total { font-size: 15px; font-weight: 650; color: var(--cream); }
+
+.month .chev {
+  color: var(--cream-faint);
+  transition: transform 180ms ease;
+  display: inline-flex;
+  align-self: center;
+}
+
+.month.open .chev { transform: rotate(180deg); }
+
+.month .breakdown { display: none; padding: 6px 0 4px; }
+
+.month.open .breakdown { display: block; }
+
+.mini { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+
+.mini .name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--cream-dim);
+  width: 92px;
+  flex: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini .rule { flex: 1; }
+.mini .rule > i { background: var(--cream-faint); }
+
+.mini .amt { font-size: 13px; color: var(--cream-dim); min-width: 64px; text-align: right; flex: none; }
+
+/* ---------- settings ---------- */
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.setting-row .name {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.target-input {
+  width: 110px;
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  color: var(--cream);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding: 9px 12px;
+}
+
+.target-input:focus { outline: 2px solid var(--brass); outline-offset: 1px; border-color: transparent; }
+
+.ghost-btn {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--hairline);
+  border-radius: 12px;
+  color: var(--cream-dim);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px;
+  margin-top: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ghost-btn:active { color: var(--cream); border-color: var(--cream-faint); }
+
+/* ---------- bottom bar ---------- */
+
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--raised);
+  border-top: 1px solid var(--hairline-soft);
+  padding: 10px 26px calc(10px + env(safe-area-inset-bottom));
+}
+
+.tab {
+  background: none;
+  border: 0;
+  color: var(--cream-faint);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 18px;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.tab.active { color: var(--brass); }
+
+.fab {
+  width: 58px;
+  height: 58px;
+  flex: none;
+  align-self: center;
+  margin-top: -34px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--brass);
+  color: var(--ink-on-brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.fab:active { transform: scale(0.96); }
+
+/* ---------- add/edit expense sheet ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 6, 0.62);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+  z-index: 5;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 105%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--raised);
+  border-top: 1px solid var(--hairline);
+  border-radius: 22px 22px 0 0;
+  padding: 12px 22px calc(24px + env(safe-area-inset-bottom));
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  z-index: 6;
+}
+
+body.sheet-open .backdrop { opacity: 1; pointer-events: auto; }
+body.sheet-open .sheet { transform: translate(-50%, 0); }
+
+.grab {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+  margin: 0 auto 16px;
+}
+
+.sheet-head { display: flex; align-items: center; margin-bottom: 20px; }
+
+.sheet-head .label { flex: 1; }
+
+.amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 2px solid var(--hairline);
+  padding-bottom: 10px;
+}
+
+.amount-row:focus-within { border-color: var(--brass); }
+
+.amount-row.invalid { border-color: var(--brick); }
+
+.amount-row .cur { font-size: 26px; font-weight: 700; color: var(--brass); }
+
+.amount-input {
+  flex: 1;
+  background: none;
+  border: 0;
+  color: var(--cream);
+  font: inherit;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.amount-input:focus { outline: none; }
+
+.amount-input::placeholder { color: var(--cream-faint); }
+
+.field-error {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brick);
+  display: none;
+}
+
+.field-error.show { display: block; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+
+.chip {
+  background: var(--ground);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--cream-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.chip.selected {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--ink-on-brass);
+}
+
+.meta-row { display: flex; gap: 10px; margin-top: 18px; }
+
+.date-input {
+  flex: none;
+  width: 150px;
+  background: var(--ground);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  color: var(--cream);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.date-input:focus { outline: 2px solid var(--brass); outline-offset: 1px; border-color: transparent; }
+
+.note-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--ground);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  color: var(--cream);
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 14px;
+}
+
+.note-input:focus { outline: 2px solid var(--brass); outline-offset: 1px; border-color: transparent; }
+
+.save-btn {
+  width: 100%;
+  margin-top: 22px;
+  background: var(--brass);
+  border: 0;
+  border-radius: 14px;
+  color: var(--ink-on-brass);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  cursor: pointer;
+}
+
+.save-btn:active { background: var(--brass-deep); }
+
+/* Delete button inside the edit sheet (Phase 3) */
+.delete-btn {
+  width: 100%;
+  margin-top: 10px;
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  color: var(--brick);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px;
+  cursor: pointer;
+  display: none;
+}
+
+.delete-btn.show { display: block; }
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 112px;
+  transform: translate(-50%, 8px);
+  background: var(--cream);
+  color: #1e241f;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+  white-space: nowrap;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 9;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- focus & motion ---------- */
+
+:is(button, input):focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
