@@ -7,6 +7,7 @@ import {
   monthKey,
   monthLabel,
   todayStr,
+  clampFutureDate,
   normalizeData,
   categoryName,
   summarizeMonth,
@@ -456,6 +457,9 @@ function openSheet(expense = null) {
   $("#sheet-title").textContent = expense ? "Edit expense" : "New expense";
   $("#amount").value = expense ? (expense.amountCents / 100).toFixed(2) : "";
   $("#date").value = expense ? expense.date : todayStr();
+  // The picker can't offer future dates — a future expense would be
+  // invisible until its month arrives.
+  $("#date").max = todayStr();
   $("#note").value = expense ? expense.note : "";
   if (expense) selectedCategoryId = expense.categoryId;
   $("#delete").classList.toggle("show", Boolean(expense));
@@ -488,7 +492,8 @@ function saveFromSheet() {
     return;
   }
 
-  const dateValue = $("#date").value || todayStr();
+  // Safety net behind the picker's max: never store a future date.
+  const dateValue = clampFutureDate($("#date").value || todayStr(), todayStr());
   const note = $("#note").value.trim();
 
   if (editingExpenseId) {

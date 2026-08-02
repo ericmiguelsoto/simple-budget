@@ -10,7 +10,7 @@
 // Bump CACHE_VERSION whenever deployed files change, so retired files
 // get cleaned out of storage on activate.
 
-const CACHE_VERSION = "budget-v2";
+const CACHE_VERSION = "budget-v3";
 
 const CORE_FILES = [
   "./",

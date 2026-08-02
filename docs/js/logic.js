@@ -84,6 +84,14 @@ export function todayStr(now = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+// An expense can't happen in the future — a future date would make it
+// invisible (not in the current month, not yet in history). Pull any
+// future date back to today. Plain string comparison works because
+// "YYYY-MM-DD" sorts like a date.
+export function clampFutureDate(dateStr, today) {
+  return dateStr > today ? today : dateStr;
+}
+
 // ---------------------------------------------------------------------------
 // Data shape guard
 // ---------------------------------------------------------------------------

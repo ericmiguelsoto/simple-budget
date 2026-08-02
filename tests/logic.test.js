@@ -9,6 +9,7 @@ import {
   monthKey,
   monthLabel,
   todayStr,
+  clampFutureDate,
   normalizeData,
   categoryName,
   summarizeMonth,
@@ -91,6 +92,18 @@ test("todayStr formats a local date as YYYY-MM-DD", () => {
   // month is 0-based in the Date constructor: 7 = August
   assert.equal(todayStr(new Date(2026, 7, 5)), "2026-08-05");
   assert.equal(todayStr(new Date(2026, 11, 31)), "2026-12-31");
+});
+
+// ---------- clampFutureDate: expenses can't happen in the future ----------
+
+test("keeps today's and past dates unchanged", () => {
+  assert.equal(clampFutureDate("2026-08-01", "2026-08-01"), "2026-08-01");
+  assert.equal(clampFutureDate("2026-07-15", "2026-08-01"), "2026-07-15");
+});
+
+test("pulls future dates back to today", () => {
+  assert.equal(clampFutureDate("2026-09-03", "2026-08-01"), "2026-08-01");
+  assert.equal(clampFutureDate("2027-01-01", "2026-08-01"), "2026-08-01");
 });
 
 // ---------- normalizeData: guard everything read from storage/import ----------
