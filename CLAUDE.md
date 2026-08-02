@@ -13,7 +13,19 @@ charts, cloud sync, notifications.
 
 ## Status
 
-Planning. The approved build plan lives in `tasks/todo.md`. No app code yet.
+Built and live (2026-08-01): https://ericmiguelsoto.github.io/simple-budget/
+Repo: https://github.com/ericmiguelsoto/simple-budget (public, Pages serves
+main:/docs). See the Review section of `tasks/todo.md` for what shipped.
+
+## Deploy runbook
+
+1. `node --test` — must be all green (bare form only; `node --test tests/`
+   breaks on this machine).
+2. If any file in `docs/` changed, bump `CACHE_VERSION` in `docs/sw.js`.
+3. Commit, `git push` — GitHub Pages redeploys main:/docs in ~1 minute.
+4. Tell Eric exactly what to check on the S25 Ultra.
+5. Icons change? Edit `tools/make-icons.mjs`, run `node tools/make-icons.mjs`,
+   visually verify the PNGs (the Read tool renders images), commit.
 
 ## Stack (deliberately tiny — do not add to it)
 

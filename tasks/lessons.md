@@ -42,6 +42,15 @@ directly to this stack (PWA + service worker + Windows dev machine):
 
 ## This project
 
+- **`node --test tests/` fails on this machine — use bare `node --test`**
+  (2026-08-01). With a directory argument, Node 24 throws MODULE_NOT_FOUND
+  ("Cannot find module ...\tests"), likely because of the space in the
+  project path. Bare `node --test` discovers tests/*.test.js fine. The
+  stop hook and package.json both use the bare form.
+- **App icons are generated, not designed by hand** (2026-08-01).
+  `tools/make-icons.mjs` draws them pixel-by-pixel and encodes PNGs with
+  only node:zlib — no image libraries on this machine needed. Verify the
+  output visually by Reading the PNG (the Read tool renders images).
 - **Eric thinks in one monthly total, not per-category envelopes**
   (2026-08-01, from the mockup review). The per-category-targets layout
   confused the app's only user — he expected a single monthly budget with
