@@ -42,6 +42,12 @@ directly to this stack (PWA + service worker + Windows dev machine):
 
 ## This project
 
+- **When every view is a time filter, check what falls outside ALL of them**
+  (2026-08-01). Home shows the current month; History shows past months; a
+  future-dated expense matched neither and silently vanished until its
+  month arrived. Found while answering Eric's "does it reset monthly?"
+  question, fixed by capping the date picker at today. Rule: for any
+  filtered view, ask "where does data go that no filter matches?"
 - **`node --test tests/` fails on this machine — use bare `node --test`**
   (2026-08-01). With a directory argument, Node 24 throws MODULE_NOT_FOUND
   ("Cannot find module ...\tests"), likely because of the space in the
