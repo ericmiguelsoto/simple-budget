@@ -581,3 +581,11 @@ document.addEventListener("visibilitychange", () => {
 renderHome();
 renderHistory();
 renderSettings();
+
+// Register the service worker (offline support). "./sw.js" keeps the
+// path correct under GitHub Pages' /simple-budget/ subfolder.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {
+    // Offline support is a bonus, never a blocker — ignore failures.
+  });
+}
