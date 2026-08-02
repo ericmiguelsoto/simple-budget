@@ -212,6 +212,164 @@ function renderHistory() {
 }
 
 // ---------------------------------------------------------------------------
+// Rendering — Settings
+// ---------------------------------------------------------------------------
+
+let renamingCategoryId = null; // id of the category being renamed, "new" while adding
+let showArchived = false;
+
+function renderSettings() {
+  const active = data.categories.filter((c) => !c.archived);
+  const archived = data.categories.filter((c) => c.archived);
+
+  const categoryRows = active
+    .map((c) => {
+      if (renamingCategoryId === c.id) {
+        return `
+          <div class="setting-row">
+            <input class="note-input" id="rename-input" value="${escapeHtml(c.name)}" maxlength="30" aria-label="Category name">
+          </div>`;
+      }
+      return `
+        <div class="setting-row">
+          <button class="name link-plain" data-rename-id="${escapeHtml(c.id)}" title="Rename">${escapeHtml(c.name)}</button>
+          <button class="icon-btn" data-archive-id="${escapeHtml(c.id)}" aria-label="Archive ${escapeHtml(c.name)}">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"/></svg>
+          </button>
+        </div>`;
+    })
+    .join("");
+
+  const newRow =
+    renamingCategoryId === "new"
+      ? `<div class="setting-row"><input class="note-input" id="rename-input" placeholder="Category name" maxlength="30" aria-label="New category name"></div>`
+      : "";
+
+  const archivedBlock =
+    archived.length === 0
+      ? ""
+      : `
+      <button class="ghost-btn" id="archived-toggle">${showArchived ? "Hide" : "Show"} archived (${archived.length})</button>
+      ${
+        showArchived
+          ? archived
+              .map(
+                (c) => `
+                <div class="setting-row archived-row">
+                  <span class="name">${escapeHtml(c.name)}</span>
+                  <button class="restore-btn" data-restore-id="${escapeHtml(c.id)}">Restore</button>
+                </div>`
+              )
+              .join("")
+          : ""
+      }`;
+
+  $("#settings-body").innerHTML = `
+    <section class="section" style="margin-top: 6px;">
+      <span class="label">Monthly budget</span>
+      <div class="setting-row">
+        <span class="name">Every month</span>
+        <input class="target-input money" id="budget-input" inputmode="decimal"
+               value="${data.monthlyBudgetCents > 0 ? (data.monthlyBudgetCents / 100).toFixed(2) : ""}"
+               placeholder="0.00" aria-label="Monthly budget in dollars">
+      </div>
+      <p class="hint">One number for the whole month. Categories below are just labels for where the money went. Tap a name to rename it.</p>
+    </section>
+
+    <section class="section">
+      <span class="label">Categories</span>
+      ${categoryRows}
+      ${newRow}
+      ${renamingCategoryId === "new" ? "" : `<button class="ghost-btn" id="add-category">Add category</button>`}
+      ${archivedBlock}
+    </section>`;
+
+  // A just-created rename/add input gets focus immediately.
+  const renameInput = $("#rename-input");
+  if (renameInput) {
+    renameInput.focus();
+    renameInput.select();
+  }
+}
+
+function commitRename() {
+  const input = $("#rename-input");
+  if (!input || renamingCategoryId === null) return;
+  const name = input.value.trim();
+
+  if (renamingCategoryId === "new") {
+    if (name) {
+      data.categories.push({ id: `cat-${Date.now().toString(36)}`, name, archived: false });
+      persist();
+      showToast(`Added ${name}`);
+    }
+  } else {
+    const category = data.categories.find((c) => c.id === renamingCategoryId);
+    if (category && name && name !== category.name) {
+      category.name = name;
+      persist();
+      showToast(`Renamed to ${name}`);
+    }
+  }
+
+  renamingCategoryId = null;
+  renderSettings();
+  renderHome();
+  renderHistory();
+}
+
+function setCategoryArchived(id, archived) {
+  const category = data.categories.find((c) => c.id === id);
+  if (!category) return;
+
+  // Never archive the last active category — the add sheet needs one.
+  const activeCount = data.categories.filter((c) => !c.archived).length;
+  if (archived && activeCount <= 1) {
+    showToast("Keep at least one category");
+    return;
+  }
+
+  category.archived = archived;
+  persist();
+  renderSettings();
+  renderHome();
+  showToast(archived ? `Archived ${category.name}` : `Restored ${category.name}`);
+}
+
+function commitBudgetInput() {
+  const input = $("#budget-input");
+  if (!input) return;
+  const text = input.value.trim();
+
+  // Empty or zero clears the budget (Home falls back to "spent" mode).
+  if (text === "" || text === "0" || text === "0.00") {
+    if (data.monthlyBudgetCents !== 0) {
+      data.monthlyBudgetCents = 0;
+      persist();
+      renderHome();
+      showToast("Budget cleared");
+    }
+    renderSettings();
+    return;
+  }
+
+  const cents = parseAmountToCents(text);
+  if (cents === null) {
+    showToast("Couldn't read that amount");
+    renderSettings(); // revert to the stored value
+    return;
+  }
+
+  if (cents !== data.monthlyBudgetCents) {
+    data.monthlyBudgetCents = cents;
+    persist();
+    renderHome();
+    showToast(`Budget set — ${formatCents(cents)} per month`);
+  }
+  renderSettings();
+}
+
+// ---------------------------------------------------------------------------
 // The add/edit sheet
 // ---------------------------------------------------------------------------
 
@@ -327,6 +485,37 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const rename = event.target.closest("[data-rename-id]");
+  if (rename) {
+    renamingCategoryId = rename.getAttribute("data-rename-id");
+    renderSettings();
+    return;
+  }
+
+  const archive = event.target.closest("[data-archive-id]");
+  if (archive) {
+    setCategoryArchived(archive.getAttribute("data-archive-id"), true);
+    return;
+  }
+
+  const restore = event.target.closest("[data-restore-id]");
+  if (restore) {
+    setCategoryArchived(restore.getAttribute("data-restore-id"), false);
+    return;
+  }
+
+  if (event.target.closest("#add-category")) {
+    renamingCategoryId = "new";
+    renderSettings();
+    return;
+  }
+
+  if (event.target.closest("#archived-toggle")) {
+    showArchived = !showArchived;
+    renderSettings();
+    return;
+  }
+
   const chip = event.target.closest(".chip");
   if (chip) {
     selectedCategoryId = chip.getAttribute("data-category-id");
@@ -362,6 +551,20 @@ for (const id of ["#amount", "#note"]) {
   });
 }
 
+// Settings inputs commit when they lose focus; Enter just blurs them
+// so both paths run through the same commit.
+document.addEventListener("focusout", (event) => {
+  if (event.target.id === "rename-input") commitRename();
+  if (event.target.id === "budget-input") commitBudgetInput();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  if (event.target.id === "rename-input" || event.target.id === "budget-input") {
+    event.target.blur();
+  }
+});
+
 // If the app was left open overnight (or across a month boundary),
 // refresh the numbers when it comes back into view.
 document.addEventListener("visibilitychange", () => {
@@ -377,3 +580,4 @@ document.addEventListener("visibilitychange", () => {
 
 renderHome();
 renderHistory();
+renderSettings();

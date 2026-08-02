@@ -328,6 +328,32 @@ body {
   text-overflow: ellipsis;
 }
 
+/* A category name that's secretly a button (tap to rename) */
+.link-plain {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.archived-row .name { color: var(--cream-faint); }
+
+.restore-btn {
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--cream-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.restore-btn:active { color: var(--cream); border-color: var(--cream-faint); }
+
 .target-input {
   width: 110px;
   background: var(--raised);
